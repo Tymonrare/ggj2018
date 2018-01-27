@@ -25,7 +25,7 @@ gm.scene = {};
 		}
 		{
 			let item = new TableItem(new PIXI.Texture.fromImage("res/table_stuff/spirit_jar.png"), {stands:true});
-			item.position.set(-gm.app.screen.width *Math.random(), -200);
+			item.position.set(gm.app.screen.width * randfRange(0.3, 0.5), -200);
 			item.snap();
 			item.image.anchor.y = 0.8;
 			item.tint = 0xCCCCFF
@@ -49,14 +49,15 @@ gm.scene = {};
 
 		{
 			let item = new TableItem(new PIXI.Texture.fromImage("res/table_stuff/spirit_numbers.png"), {stands:false, movable:false});
-			item.position.set(gm.app.screen.width/2, -100);
+			item.position.set(-gm.app.screen.width/2, -400);
+			item.image.scale.x = -1;
 			gm.scene.projectionRoot.addChild(item);
 
 			let score =  ("" + gm.play.score).padStart(6, "0");
-			let bitmapText = new PIXI.extras.BitmapText(score, {font: "40px digital-regular", align: "left"});
+			let bitmapText = new PIXI.extras.BitmapText(score, {font: "70px digital-regular", align: "left"});
 			item.addChild(bitmapText);
-			bitmapText.y -= 155;
-			bitmapText.x -= 30;
+			bitmapText.y += 185;
+			bitmapText.x -= 130;
 		}
 
 	}
@@ -109,6 +110,7 @@ gm.scene = {};
 		gm.scene.cornerPapers.addNew = function(){
 			let item = new CornerPaper();
 			container.addChild(item);
+
 		}
 		gm.scene.cornerPapers.removeAll = function(){
 			function rm(index){
@@ -118,9 +120,6 @@ gm.scene = {};
 				rm(i);
 			}
 		}
-
-		for (var i = 0;i < 3;i++)
-			gm.scene.cornerPapers.addNew();
 	}
 	function initMain(){
 		var container = new PIXI.Container();
@@ -160,12 +159,14 @@ gm.scene = {};
 		strip.x = gm.scene.ghostStorage.worldTransform.tx;
 
 		for(var i in strip.points){
-				strip.points[i].x = 0;
-				strip.points[i].y = -10000-i*10;
-			}
+			strip.points[i].x = 0;
+			strip.points[i].y = -10000-i*10;
+		}
 
-			strip.moveTo(0, randiRange(-300, 0))
-			gm.scene.ghostStorage.ghosts.push(strip);
+		strip.moveTo(0, randiRange(-300, 0))
+		gm.scene.ghostStorage.ghosts.push(strip);
+
+		gm.scene.cornerPapers.addNew();
 	}
 	gm.scene.init = function(){
 		load(()=>{
@@ -183,7 +184,7 @@ gm.scene = {};
 				gm.scene.root.addChild(container);
 
 				initGhosts();
-				//initCornerPapers();
+				initCornerPapers();
 			});
 		});
 	}

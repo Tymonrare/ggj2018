@@ -17,7 +17,7 @@ let TableItem = (() => {
 
 			if(texture){
 				var image = new PIXI.projection.Sprite2d(texture);
-				image.anchor.set(0.5, props.stands ? 1.0 : 0.5);
+				image.anchor.set(0.5, props.stands ? 1.0 : 0);
 				this.addChild(image);
 				this.image = image;
 			}
@@ -37,7 +37,7 @@ let TableItem = (() => {
 		}
 
 		snap() {
-			this.position.x = Math.min(Math.max(this.position.x, -gm.app.screen.width / 2), gm.app.screen.width / 2);
+			this.position.x = Math.min(Math.max(this.position.x, -gm.app.screen.width), gm.app.screen.width);
 			this.position.y = Math.min(Math.max(this.position.y, -gm.app.screen.height + 10), 10);
 			this.scale.x = 1;
 			this.scale.y = 1;
@@ -95,6 +95,8 @@ let TableItem = (() => {
 					obj.dragObjStart.x + (dragPointerEnd.x - obj.dragPointerStart.x),
 					obj.dragObjStart.y + (dragPointerEnd.y - obj.dragPointerStart.y)
 				);
+				obj.position.x = Math.min(Math.max(obj.position.x, -gm.app.screen.width), gm.app.screen.width);
+				obj.position.y = Math.min(Math.max(obj.position.y, -gm.app.screen.height + 10), 10);
 				if(obj.onDrag) obj.onDrag();
 
 			//set depth

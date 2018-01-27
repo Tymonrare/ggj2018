@@ -23,6 +23,11 @@ let CornerPaper = (() => {
 			this.position.set(gm.app.screen.width*2, gm.app.screen.height*2);
 			this.toggleCornerShow();
 
+			let g = new GhostAvatar("res/ghosts/spirit_sprites.json");
+			g.scale.set(0.7);
+			g.position.set(-200,-300);
+			this.addChild(g);
+
 			this.addInteraction();
 		}
 

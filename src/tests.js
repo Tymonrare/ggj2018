@@ -5,7 +5,7 @@ gm.tests = {};
 	gm.tests.pixiDefaults = function(){
 		//simple sprite
 		var panda = PIXI.Sprite.fromImage('res/panda.png');
-		panda.anchor.set(0.5);
+		panda.texture.frame = new PIXI.Rectangle(0,0, 100,100);
 		gm.app.stage.addChild(panda);
 	}
 	gm.tests.pixiProjections = function(){
@@ -29,6 +29,10 @@ gm.tests = {};
 		for(var i = 0;i < 3;i++){
 			createTextureMesh();
 		}
+	}
+	gm.tests.ghostAvatar = function(){
+		let g = new GhostAvatar("res/ghosts/spirit_sprites.json");
+		gm.app.stage.addChild(g);
 	}
 	gm.tests.bitmapText = function(){
 		let bitmapText = new PIXI.extras.BitmapText("text using a fancy font!", {font: "35px digital-regular", align: "right"});
