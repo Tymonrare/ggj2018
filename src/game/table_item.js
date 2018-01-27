@@ -3,9 +3,9 @@ let TableItem = (() => {
 		stands:false,
 		movable:true
 	}
-	return class extends PIXI.projection.Sprite2d {
+	return class extends PIXI.projection.Container2d {
 		constructor(texture, props) {
-			super(texture);
+			super();
 
 			//set props
 			props = props||defaultProps;
@@ -15,7 +15,13 @@ let TableItem = (() => {
 				props[i] = defaultProps[i];
 			}
 
-			this.anchor.set(0.5, props.stands ? 1.0 : 0.5);
+			if(texture){
+				var image = new PIXI.projection.Sprite2d(texture);
+				image.anchor.set(0.5, props.stands ? 1.0 : 0.5);
+				this.addChild(image);
+				this.image = image;
+			}
+
 			this.proj.affine = props.stands ? PIXI.projection.AFFINE.AXIS_X : PIXI.projection.AFFINE.NONE;;
 			if(props.movable)
 				this.addInteraction();

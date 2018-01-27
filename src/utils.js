@@ -35,7 +35,7 @@ function randfRange(min, max) {
  * @Returns empty array if input array empty or not array; or rand element if not
  */
 function randElem(array) {
-	if (array && array.length && Array.isArray(array))
+	if (array && array.length && (Array.isArray(array) || "string"))
 		return array[randi(array.length - 1)];
 	else
 		return null;
@@ -62,3 +62,7 @@ function LinearInterpolate(y1, y2, mu)
 {
    return(y1*(1-mu)+y2*mu);
 }
+String.prototype.replaceAt=function(index, replacement) {
+    return this.substr(0, index) + replacement+ this.substr(index + replacement.length);
+}
+

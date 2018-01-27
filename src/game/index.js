@@ -9,12 +9,25 @@ gm.scene = {};
 			item.snap();
 			item.skew.x = 0.3;
 			gm.scene.projectionRoot.addChild(item);
+
+			let timeString = "00000";
+
+			let bitmapText = new PIXI.extras.BitmapText(timeString, {font: "75px digital-regular", align: "center"});
+			item.addChild(bitmapText);
+			bitmapText.y -= 150;
+			bitmapText.x -= 100;
+
+			setInterval(()=>{
+				let sample = "1234 567890!@#$%^&*()p87gBSAlpfkpЁ!";
+				timeString = timeString.replaceAt(randi(timeString.length-1), randElem(sample));
+				bitmapText.text = timeString;
+			}, 1000);
 		}
 		{
 			let item = new TableItem(new PIXI.Texture.fromImage("res/table_stuff/spirit_jar.png"), {stands:true});
 			item.position.set(-gm.app.screen.width *Math.random(), -200);
 			item.snap();
-			item.anchor.y = 0.8;
+			item.image.anchor.y = 0.8;
 			item.tint = 0xCCCCFF
 			item.ghosts = [];
 			gm.scene.ghostStorage = item;
@@ -38,6 +51,12 @@ gm.scene = {};
 			let item = new TableItem(new PIXI.Texture.fromImage("res/table_stuff/spirit_numbers.png"), {stands:false, movable:false});
 			item.position.set(gm.app.screen.width/2, -100);
 			gm.scene.projectionRoot.addChild(item);
+
+			let score =  ("" + gm.play.score).padStart(6, "0");
+			let bitmapText = new PIXI.extras.BitmapText(score, {font: "40px digital-regular", align: "left"});
+			item.addChild(bitmapText);
+			bitmapText.y -= 155;
+			bitmapText.x -= 30;
 		}
 
 	}
@@ -150,6 +169,8 @@ gm.scene = {};
 	}
 	gm.scene.init = function(){
 		load(()=>{
+			gm.play = {};
+			gm.play.score = 666;
 
 			initMain();
 			initTable();
@@ -162,7 +183,7 @@ gm.scene = {};
 				gm.scene.root.addChild(container);
 
 				initGhosts();
-				initCornerPapers();
+				//initCornerPapers();
 			});
 		});
 	}
