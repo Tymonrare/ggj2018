@@ -66,3 +66,10 @@ String.prototype.replaceAt=function(index, replacement) {
     return this.substr(0, index) + replacement+ this.substr(index + replacement.length);
 }
 
+function calculateDifferenceBetweenAngles(firstAngle, secondAngle)
+  {
+        var difference = secondAngle - firstAngle;
+        while (difference < -Math.PI) difference += Math.PI*2;
+        while (difference > Math.PI) difference -= Math.PI*2;
+        return difference;
+ }

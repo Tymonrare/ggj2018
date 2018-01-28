@@ -23,11 +23,6 @@ let CornerPaper = (() => {
 			this.position.set(gm.app.screen.width*2, gm.app.screen.height*2);
 			this.toggleCornerShow();
 
-			let g = new GhostAvatar("res/ghosts/spirit_sprites.json");
-			g.scale.set(0.7);
-			g.position.set(-200,-300);
-			this.addChild(g);
-
 			this.addInteraction();
 		}
 
@@ -63,6 +58,10 @@ let CornerPaper = (() => {
 				.on('pointerdown', this.onClick)
 		}
 
+		putForward(){
+				this.parent.setChildIndex(this, this.parent.children.length-1);
+		}
+
 		onClick(event){
 			let obj = event.currentTarget;
 
@@ -73,7 +72,7 @@ let CornerPaper = (() => {
 					.to({ x: gm.app.screen.width/2, y:gm.app.screen.height/2, rotation:randfRange(-0.1, 0.1)}, shiftTime, createjs.Ease.quartInOut)
 					.call(()=>this.state = 2);
 
-				obj.parent.setChildIndex(obj, obj.parent.children.length-1);
+				this.putForward();
 			}
 			else if(this.state == 2){
 				this.state = 1;

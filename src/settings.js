@@ -15,8 +15,7 @@ gm.settings.data = {};
 		let hs = window.innerHeight/stt.data.canvasSize.height;
 		let refs = 1;
 
-		if(ws < 1 || hs < 1)
-			refs = ws < hs ? ws : hs;
+		refs = ws < hs ? ws : hs;
 		
 		let w = (stt.data.canvasSize.width*refs).toFixed(2); 
 		let h = (stt.data.canvasSize.height*refs).toFixed(2); 
