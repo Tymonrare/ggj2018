@@ -15,21 +15,28 @@ let CornerPaper = (() => {
 			
 			this.cornerPos = {
 				x:gm.app.screen.width,
-				y:gm.app.screen.height,
+				y:gm.app.screen.height + 100,
 				rotation:Math.PI/10 - Math.PI/14*gm.scene.cornerPapers.root.children.length,
 				alpha:1
 			}
 			this.anchor.set(0.5);
 			this.position.set(gm.app.screen.width*2, gm.app.screen.height*2);
-			this.toggleCornerShow();
 
-			this.addInteraction();
+			this.autoPutForward = true;
+
+			requestAnimationFrame(()=>{
+				this.toggleCornerShow();
+				this.addInteraction();
+			});
 		}
 
 		removeFromGame(){
 			createjs.Tween.get(this, {loop: false, override:true})
 				.to({ x: gm.app.screen.width*2, y:gm.app.screen.height*2, alpha:0, rotation:Math.PI/2}, shiftTime, createjs.Ease.quartInOut)
-				.call(()=>this.parent.removeChild(this));
+				.call(()=>{
+					this.parent.removeChild(this)
+					gm.scene.cornerPapers.updateRotations();
+				});
 		}
 
 		toggleCornerShow(){
@@ -72,7 +79,8 @@ let CornerPaper = (() => {
 					.to({ x: gm.app.screen.width/2, y:gm.app.screen.height/2, rotation:randfRange(-0.1, 0.1)}, shiftTime, createjs.Ease.quartInOut)
 					.call(()=>this.state = 2);
 
-				this.putForward();
+				if(this.autoPutForward)
+					this.putForward();
 			}
 			else if(this.state == 2){
 				this.state = 1;

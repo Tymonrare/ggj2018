@@ -63,6 +63,7 @@ let CrystalPortal = (() => {
 
 			var ropesContainer = new PIXI.Container();
 			this.ropesContainer = ropesContainer;
+			this.ropesContainer.scale.set(0);
 			pivotContainer.addChild(ropesContainer);
 
 			this.teleportDirections = [];
@@ -87,13 +88,18 @@ let CrystalPortal = (() => {
 				}
 
 				var rope = new PIXI.mesh.Rope(PIXI.Texture.fromImage('res/rope.png'), points);
-				rope.rotation = Math.PI*2*(index/gm.play.boilers) + randfRange(-Math.PI*0.1, Math.PI*0.1);
-				//rope.rotation = Math.PI*2*(index/gm.play.boilers);
+				rope.rotation = Math.PI*2*(index/gm.play.boilers.count) + randfRange(-Math.PI*0.1, Math.PI*0.1);
 
 				self.teleportDirections.push(rope.rotation);
 				rope.scale.y = 0.5;
 				rope.blendMode = PIXI.BLEND_MODES.ADD;
+				rope.interactive = false;
 				ropesContainer.addChild(rope);
+
+				var text = new PIXI.Text('to ' + index, {fontFamily : 'Arial', fontSize: 44, fill : 0xFFFFFF});
+				pivotContainer.addChild(text);
+				text.x = Math.cos(rope.rotation)*200;
+				text.y = Math.sin(rope.rotation)*200;
 
 				// start animating
 				var count = randf(10);
@@ -107,14 +113,17 @@ let CrystalPortal = (() => {
 						points[i].x = i * ropeLength + Math.cos((i * 0.3) + count) * 30 * lfactor;
 					}
 				});
+
 			}
 
-			for(var i = 0; i < gm.play.boilers;i++)
+			for(var i = 0; i < gm.play.boilers.count;i++)
 				add(i);
 		}
 
 		allowTransfer(ghost){
 			this.allowTeleport = false; //do not accept new ghosts
+
+			this.ropesContainer.scale.set(1);
 
 			createjs.Tween.get(this.getChildByName("ropes_pivot"), {loop: false})
 				.to({alpha:1}, 1000, createjs.Ease.quartInOut)
@@ -124,6 +133,7 @@ let CrystalPortal = (() => {
 
 		sendGhost(){
 			if(!this.containsGhost || this.allowTeleport) return;
+			this.tranfering = true;
 
 			createjs.Tween.get(this.highlightRopesRay, {loop: false})
 				.to({alpha:1}, 50, createjs.Ease.quartInOut)
@@ -134,35 +144,58 @@ let CrystalPortal = (() => {
 				.to({x:7, y:2.5}, 200, createjs.Ease.quadOut)
 				.to({x:5, y:1}, 1000, createjs.Ease.quartIn) //just return for next animation
 
-			this.allowTeleport = true; //do not accept new ghosts
 
 			createjs.Tween.get(this.getChildByName("ropes_pivot"), {loop: false})
 				.to({alpha:0}, 2000, createjs.Ease.quartInOut)
 
 			this.glitchSrt = 0;
 
+			this.containsGhost.vanishInPoint = false;
+			createjs.Tween.get(this.containsGhost, {loop: false, override:true})
+				.to({alpha:1}, 300, createjs.Ease.quartIn)
+
+			this.containsGhost.moveToAbsolute(
+				this.ropesContainer.worldTransform.tx + Math.cos(this.highlightRopesRay.rotation)*1200, 
+				this.ropesContainer.worldTransform.ty + Math.sin(this.highlightRopesRay.rotation)*1200);
+
 			setTimeout(()=>{
+				this.allowTeleport = true; //do not accept new ghosts
+				this.tranfering = false;
+
 				this.containsGhost.linkPaper.removeFromGame();
 				this.containsGhost.parent.removeChild(this.containsGhost);
-				gm.play.score += 10;
+
+				this.ropesContainer.scale.set(0);
+				gm.play.soulsSent += 1;
+
+				var g = this.containsGhost;
+				var b = gm.play.boilers.souls[this.targetBoiler];
+				b.toppers[g.topperType] = (b.toppers[g.topperType]||0)+1;
+				b.deathCauses[g.deathCause] = (b.deathCauses[g.deathCause]||0)+1;
+				b.mouths[g.mouthType] = (b.mouths[g.mouthType]||0)+1;
+				b.colors[g.colorName] = (b.colors[g.colorName]||0)+1;
+
 				this.containsGhost = null;
-			}, 300);
+			}, 1000);
 		}
 
 		handleGhosts(event){
-			if(gm.activeGhost && this.allowTeleport && this.crystal.getBounds().contains(event.data.global.x, event.data.global.y)){
+			if(!this.tranfering && gm.activeGhost && this.allowTeleport && this.crystal.getBounds().contains(event.data.global.x, event.data.global.y)){
 				gm.activeGhost.interactive = false;
 				gm.activeGhost.vanishInPoint = true;
-				gm.activeGhost.moveToAbsolute(this.worldTransform.tx, this.worldTransform.ty-250);
+
+				gm.activeGhost.moveToAbsolute(
+					this.ropesContainer.worldTransform.tx,
+					this.ropesContainer.worldTransform.ty);
 
 				createjs.Tween.get(gm.activeGhost, {loop: false})
-					.to({alpha:0}, 2000, createjs.Ease.quartInOut)
+					.to({alpha:0}, 1000, createjs.Ease.quartInOut)
 
 				this.allowTransfer(gm.activeGhost);
 
 				gm.activeGhost = null;
 			}
-			else if(this.containsGhost){
+			else if(this.containsGhost && !this.tranfering){
 				var mousepos = event.data.global;
 				var thispos = new PIXI.Point(
 					this.worldTransform.tx,
@@ -200,6 +233,7 @@ let CrystalPortal = (() => {
 					else{
 						rope.tint = 0xFFBBBB;
 						this.highlightRopesRay.rotation = rope.rotation;
+						this.targetBoiler = i;
 					}
 				}
 

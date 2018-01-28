@@ -2,6 +2,14 @@ let gm = gm||{};
 gm.utils = {};
 
 gm.utils.loadCoa_tools_faces = function(config, params, callback){
+	function rand(max, seed){
+		seed = (params.seed+seed)+10000;
+		seed *= Math.sin(seed)*Math.tan(seed);
+		seed = Math.abs(Math.round(seed));
+
+		return seed%max;
+	}
+
 	params = params||{};
 
 	var container = new PIXI.Container();
@@ -25,13 +33,6 @@ gm.utils.loadCoa_tools_faces = function(config, params, callback){
 
 		//(2)
 		function addImage(){
-			function rand(max, seed){
-				seed = (params.seed+seed)+10000;
-				seed *= Math.sin(seed)*Math.tan(seed);
-				seed = Math.abs(Math.round(seed));
-
-				return seed%max;
-			}
 
 			let xframe = rand(node.tiles_x, node.name.length+node.resource_path.length);//Gen random values
 			let yframe = rand(node.tiles_y, node.name.length+node.resource_path.length);
@@ -78,9 +79,9 @@ gm.utils.loadCoa_tools_faces = function(config, params, callback){
 
 		let res = resources.config.data.nodes;
 		let a_topperSelect = ["horns", "ears", "hats"];
-		let topperSelect = a_topperSelect[params.seed%a_topperSelect.length];
+		let topperSelect = a_topperSelect[rand(a_topperSelect.length, params.seed)];
 		let a_mouthSelect = ["mouth", "mustache"];
-		let mouthSelect = a_mouthSelect[params.seed%a_mouthSelect.length];
+		let mouthSelect = a_mouthSelect[rand(a_mouthSelect.length, params.seed)];
 		let elements = [
 			"base",
 			"eyes",
@@ -92,6 +93,9 @@ gm.utils.loadCoa_tools_faces = function(config, params, callback){
 		let colorizable = [
 			"base", "ears"
 		]
+
+		container.gm_topperType = topperSelect;
+		container.gm_mouthType = mouthSelect;
 
 		for(var i in res){
 			let name = res[i].name.split('.')[0];
@@ -108,3 +112,4 @@ gm.utils.loadCoa_tools_faces = function(config, params, callback){
 
 	return container;
 }
+

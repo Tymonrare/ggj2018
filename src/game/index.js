@@ -4,6 +4,30 @@ gm.scene = {};
 (function(){
 	function initTableStuff(){
 		{
+			for(var i = 0;i < 10;i++){
+				var index = randi(5)
+				var stands = !!(index >=3 && randi(1));
+				let item = new TableItem(new PIXI.Texture.fromImage("res/table_stuff/small/"+index+".png"), {stands:stands, movable:true});
+				item.position.set(randfRange(-gm.app.screen.width/2, gm.app.screen.width/2), -randf(gm.app.screen.height));
+				if(stands)
+					item.rotation = randfRange(-Math.PI/10, Math.PI/10);
+				else
+					item.image.rotation = Math.PI*2*Math.random();
+				item.snap();
+				gm.scene.projectionRoot.addChild(item);
+			}
+		}
+		var items = ["pen", "pencil"];
+		for(var i in items)
+		{
+			let item = new TableItem(new PIXI.Texture.fromImage("res/table_stuff/small/"+items[i]+".png"), {stands:false, movable:true});
+			item.position.set(randfRange(-gm.app.screen.width/2, gm.app.screen.width/2), -randf(gm.app.screen.height));
+			item.snap();
+			item.image.scale.set(0.3);
+			item.image.rotation = Math.PI*2*Math.random();
+			gm.scene.projectionRoot.addChild(item);
+		}
+		{
 			let item = new CrystalPortal();
 			item.position.set(0, -500);
 			item.snap();
@@ -66,17 +90,25 @@ gm.scene = {};
 		{
 			let item = new TableItem(new PIXI.Texture.fromImage("res/table_stuff/spirit_numbers.png"), {stands:false, movable:false});
 			item.position.set(-gm.app.screen.width/2, -400);
-			item.image.scale.x = -1;
 			gm.scene.projectionRoot.addChild(item);
 
 			let score =  ("" + gm.play.score).padStart(6, "0");
-			let bitmapText = new PIXI.extras.BitmapText(score, {font: "70px digital-regular", align: "left"});
-			item.addChild(bitmapText);
-			bitmapText.y += 185;
-			bitmapText.x -= 130;
+			let scoreText = new PIXI.extras.BitmapText(score, {font: "70px digital-regular", align: "left"});
+			item.addChild(scoreText);
+			scoreText.y += 185;
+			scoreText.x -= 150;
+
+			let souls =  ("" + gm.play.soulsSent).padStart(6, "0");
+			let soulsText = new PIXI.extras.BitmapText(score, {font: "70px digital-regular", align: "left"});
+			item.addChild(soulsText);
+			soulsText.y += 350;
+			soulsText.x -= 150;
+
 			setInterval(()=>{
 				score =  ("" + gm.play.score).padStart(6, "0");
-				bitmapText.text = score;
+				souls =  ("" + gm.play.soulsSent).padStart(6, "0");
+				scoreText.text = score;
+				soulsText.text = souls;
 			}, 100);
 		}
 
@@ -86,7 +118,7 @@ gm.scene = {};
 			item.snap();
 			gm.scene.projectionRoot.addChild(item);
 		}
-
+		
 	}
 	function initTable(){
 		// create a new Sprite from an image path
@@ -126,11 +158,6 @@ gm.scene = {};
 		});
 	}
 	function initCornerPapers(){
-		//Без нее мигает)
-		var panda = PIXI.Sprite.fromImage('res/panda.png');
-		panda.anchor.set(1);
-		gm.app.stage.addChild(panda);
-
 		var container = new PIXI.Container();
 		gm.scene.root.addChild(container);
 		gm.scene.cornerPapers = {};
@@ -138,18 +165,102 @@ gm.scene = {};
 
 		gm.scene.cornerPapers.addNew = function(){
 			let item = new CornerPaper();
-			container.addChild(item);
+			container.addChildAt(item, 1);
 
 			return item;
+		}
+		gm.scene.cornerPapers.updateRotations = function(){
+			for(var i = 1;i < container.children.length;i++){
+				let rotation = Math.PI/10 - Math.PI/14*i;
+				container.children[i].cornerPos.rotation = rotation;
+				if(container.children[i].state == 0)
+					createjs.Tween.get(container.children[i], {loop: false})
+						.to(container.children[i].cornerPos, 300 + i*100, createjs.Ease.quartInOut)
+			}
 		}
 		gm.scene.cornerPapers.removeAll = function(){
 			function rm(index){
 				setTimeout(()=>container.children[index].removeFromGame(), randf(100));
 			}
-			for(var i in container.children){
+			//first paper is parmanent
+			for(var i = 1; i < container.children.length;i++)
 				rm(i);
-			}
 		}
+
+		initMainPaper();
+	}
+	function initMainPaper(){
+		var container = new PIXI.Container();
+		gm.scene.cornerPapers.root.addChild(container);
+
+		function addPaper(index){
+			var factor = (i / gm.play.boilers.count);
+			var paper = new CornerPaper();
+			container.addChild(paper);
+			paper.cornerPos.y -= 700 - 100*factor;
+			paper.cornerPos.x += 300 - 100*factor;
+			paper.cornerPos.rotation = Math.PI/5 - Math.PI*factor/7;
+			paper.autoPutForward = false;
+
+			var numberText = new PIXI.Text(index + ' Boiler', {fontFamily : 'Arial', fontSize: 16, fill : 0x111111});
+			numberText.y = 280;
+			numberText.x = -200;
+			paper.addChild(numberText);
+
+			var basicText = new PIXI.Text('Basic text in pixi', {fontFamily : 'Arial', fontSize: 20, fill : 0x111111});
+			basicText.y = -280;
+			basicText.x = -200;
+			paper.addChild(basicText);
+
+			setInterval(()=>{
+				var text = ""
+
+				var b = gm.play.boilers.souls[index];
+
+				var combos = {};
+				var singles = 0;
+				function processText(param){
+					for(var key in param){
+						text += "\t\t" + key + ": " + param[key] + "\n";
+						if(param[key] > 1)
+							combos["x" + param[key]] = (combos["x" + param[key]]||0)+1
+						else
+							singles++;
+					}
+				}
+
+				text += "Boiler " + index + ":\n";
+
+				text += " DEATH CAUSES:\n";
+				processText(b.deathCauses);
+
+				text += " TOPPERS:\n";
+				processText(b.toppers);
+
+				text += " MOUTHS:\n";
+				processText(b.mouths);
+
+				text += " COLORS:\n";
+				processText(b.colors);
+
+				text += "\n\n SINGLES: " + singles;
+				text += "\t(+" + singles*2 + "points)";
+
+				text += "\n DUPLICATIONS: ";
+				var pluspoints = 0;
+				for(var key in combos){
+					text += " " + key + ": " + combos[key];
+					pluspoints += Math.pow(parseInt(key.slice(1)), combos[key]);
+				}
+				text += "\t(-" + pluspoints + "points)";
+
+				basicText.text = text;
+			}, 100);
+		}
+
+		for(var i = gm.play.boilers.count-1; i >=0 ;i--)
+			addPaper(i);
+
 	}
 	function initEnvironment(){
 		function addLamp(where, scale){
@@ -161,7 +272,7 @@ gm.scene = {};
 				gm.scene.root.addChildAt(item, 0);
 
 				createjs.Tween.get(item, {loop: true})
-						.to({rotation:Math.PI*randfRange(-0.02, 0.02)}, randiRange(2000,5000), createjs.Ease.quadInOut)
+					.to({rotation:Math.PI*randfRange(-0.02, 0.02)}, randiRange(2000,5000), createjs.Ease.quadInOut)
 					.to({rotation:0}, randiRange(2000,5000), createjs.Ease.quadInOut)
 			}
 
@@ -172,11 +283,11 @@ gm.scene = {};
 				item.anchor.set(0.5, 0.5);
 				item.x = gm.app.screen.width*where;
 				item.y = 400*scale;
-				item.scale.set(20*scale);
-				item.blendMode = PIXI.BLEND_MODES.SCREEN;
+				item.scale.set(30*scale);
+				item.blendMode = PIXI.BLEND_MODES.ADD;
 				item.alpha = 0.5;
 				item.rotation = Math.PI*2*Math.random();
-				item.tint = 0xFFDD56;
+				item.tint = 0xFFDDAA;
 				gm.scene.root.addChildAt(item, 1);
 
 				createjs.Tween.get(item, {loop: true})
@@ -188,6 +299,10 @@ gm.scene = {};
 		addLamp(0.2, 0.25);
 		addLamp(0.8, 0.35);
 		addLamp(0.55, 0.15);
+
+		var back = new PIXI.Sprite(new PIXI.Texture.fromImage("res/back.jpg"));
+		gm.scene.root.addChildAt(back, 0)
+		back.tint = 0x333333;
 	}
 	function initMain(){
 		var container = new PIXI.Container();
@@ -212,16 +327,37 @@ gm.scene = {};
 		const loader = new PIXI.loaders.Loader();
 		loader.add('fnt', 'res/fonts/digital-regular/digital-regular.fnt')
 		loader.load((loader, resources) => {
-			PIXI.loaders.parseBitmapFontData(resources.fnt, new PIXI.Texture.fromImage("res/fonts/digital-regular/digital-regular.png")); 
+			PIXI.loaders.parseBitmapFontData(resources.fnt, new PIXI.Texture.fromImage("res/fonts/digital-regular/digital-regular.png"));
 			callback();
 		});
+	}
+	function calcScore(){
+		gm.play.score = 0;
+
+		var combos = {};
+		var singles = 0;
+			for(var i = 0; i < gm.play.boilers.count;i++){
+				var b = gm.play.boilers.souls[i];
+				for(var bkey in b)
+					for(var key in b[bkey]){
+						if(b[bkey][key] > 1)
+							combos["x" + b[bkey][key]] = (combos["x" + b[bkey][key]]||0)+1
+						else
+							singles++;
+					}
+			}
+		for(var key in combos){
+			var add = Math.pow(parseInt(key.slice(1)), combos[key]);
+			gm.play.score -= add;
+		}
+		gm.play.score += singles*2;
 	}
 	gm.spawnGhost = function(){
 		var strip = new BaseGhost("res/ghosts/flow/sprites_flow.json");
 		gm.scene._ghostContainer.addChild(strip);
 
 		strip.tint = 0xFFFFFF*Math.random();
-		strip.scale.set(randfRange(0.8, 1.2));
+		strip.scale.set(randfRange(0.8, 1));
 
 		strip.y = gm.scene.ghostStorage.worldTransform.ty;
 		strip.x = gm.scene.ghostStorage.worldTransform.tx;
@@ -235,12 +371,47 @@ gm.scene = {};
 		gm.scene.ghostStorage.ghosts.push(strip);
 	}
 	gm.scene.init = function(){
+		gm.play = {};
+		gm.play.deathCauses = [
+			"Ischaemic heart disease",
+			"Stoke",
+			"Lower respiratory",
+			"Chronic obstructive",
+			"Trachea cancer",
+			"Bronchus cancer",
+			"Lung cancer",
+			"Diabetes mellitus",
+			"Alzheimer disease",
+			"Diarrhoeal disease",
+			"Tuberculosis",
+			"Road injury",
+			"Brick injury",
+			"Accident"
+		];
+		gm.play.colors = {};
+
+		var colorNames = Object.keys(commonColors);
+		for(var i = 0;i < 7;i++){
+			var c = randElem(colorNames);
+			gm.play.colors[c] = commonColors[c];
+		}
+
+		gm.play.score = 0;
+		setInterval(calcScore, 100);
+		gm.play.soulsSent = 0;
+		gm.play.boilers = {};
+		gm.play.boilers.count = 3;
+		gm.play.boilers.souls = [];
+		for(var i = 0; i < gm.play.boilers.count;i++){
+			gm.play.boilers.souls.push({
+				toppers:{},
+				deathCauses:{},
+				mouths:{},
+				colors:{}
+			});
+		}
+
 		load(()=>{
-
-			gm.play = {};
-			gm.play.score = 0;
-			gm.play.boilers = 4;
-
 			initMain();
 			initTable();
 			initTableStuff();
@@ -256,6 +427,10 @@ gm.scene = {};
 				initGhosts();
 				initCornerPapers();
 			});
+
+			setInterval(()=>{
+				if(!randi(gm.scene.cornerPapers.root.children.length)) gm.spawnGhost();
+			}, 5050);
 		});
 	}
 }())

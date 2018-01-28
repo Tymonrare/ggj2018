@@ -17,7 +17,9 @@ let BaseGhost = (() => {
 			}
 
 			this.randSeed = randi(999999);
-			this.color = randfRange(0.5, 1)*0xFFFFFF; 
+			this.colorName = randElem(Object.keys(gm.play.colors));
+			this.color = hashCode(gm.play.colors[this.colorName]);
+			this.deathCause = randElem(gm.play.deathCauses);
 
 			var rowbody = gm.utils.loadCoa_tools_faces(config, {color:this.color, seed:this.randSeed}, ()=>{
 				rowbody.cacheAsBitmap = true;
@@ -27,6 +29,10 @@ let BaseGhost = (() => {
 				body.y = rowbody.getBounds().height-50;
 				this.addChild(body);
 
+				this.mouthType = rowbody.gm_mouthType;
+				this.topperType = rowbody.gm_topperType;
+
+				//simple sprite in corner
 				/*
 				{
 					var item = new PIXI.Sprite(texture);
@@ -60,6 +66,10 @@ let BaseGhost = (() => {
 			g.scale.set(0.7);
 			g.position.set(-200,-300);
 			this.linkPaper.addChild(g);
+
+			var basicText = new PIXI.Text('Death cause: \n ' + this.deathCause, {fontFamily : 'Arial', fontSize: 24, fill : 0x111111});
+			basicText.y = -265;
+			this.linkPaper.addChild(basicText);
 		}
 
 		moveToAbsolute(x,y, onTargetReached){
